@@ -1,6 +1,7 @@
 import SpiritualHeader from '@/components/SpiritualHeader';
 import HeroSlider from '@/components/HeroSlider';
 import ModuleGrid from '@/components/ModuleGrid';
+import QuickActions from '@/components/QuickActions';
 import Footer from '@/components/Footer';
 
 const Index = () => {
@@ -9,6 +10,7 @@ const Index = () => {
       <SpiritualHeader />
       <main className="flex-1 flex flex-col">
         <HeroSlider />
+        <QuickActions />
         <ModuleGrid />
       </main>
       <Footer />
