@@ -157,4 +157,31 @@
   .slide-indicator.active {
     @apply w-8 bg-primary;
   }
+
+  /* Safe area for bottom nav */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Dream Bottom Nav Glassmorphism */
+  .dream-glass {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.3s cubic-bezier(0.17, 0.67, 0.88, 1.0);
+  }
+
+  .dark .dream-glass {
+    background: rgba(16, 16, 16, 0.85);
+  }
+
+  /* Shalawat Glow Effect */
+  .shalawat-glow {
+    box-shadow: 0 0 18px rgba(255, 105, 180, 0.6);
+  }
+
+  /* Ghost Architect Glow */
+  .ghost-glow {
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+  }
 }
