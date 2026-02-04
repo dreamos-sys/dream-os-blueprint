@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.lovable.269ec01603874f81836dcede76b72b66',
-  appName: 'Dream OS v13.0 - Al Fikri',
+  appName: 'mawar-duri-os',
   webDir: 'dist',
   
   // Development server for hot-reload
@@ -22,7 +22,7 @@ const config: CapacitorConfig = {
     // WebView debugging (disable in production)
     webContentsDebuggingEnabled: true,
     // Background color matching theme
-    backgroundColor: '#FDF8FA',
+    backgroundColor: '#0A1F0A',
     // Status bar
     overrideUserAgent: 'DreamOS/13.0 Android',
     // Splash screen
@@ -38,7 +38,7 @@ const config: CapacitorConfig = {
   // iOS-specific configuration  
   ios: {
     contentInset: 'automatic',
-    backgroundColor: '#FDF8FA',
+    backgroundColor: '#0A1F0A',
     overrideUserAgent: 'DreamOS/13.0 iOS',
     preferredContentMode: 'mobile',
   },
@@ -54,19 +54,21 @@ const config: CapacitorConfig = {
     
     // Splash Screen
     SplashScreen: {
-      launchShowDuration: 2000,
+      launchShowDuration: 3000,
       launchAutoHide: true,
-      backgroundColor: '#FDF8FA',
+      launchFadeOutDuration: 500,
+      backgroundColor: '#0A1F0A',
       androidSplashResourceName: 'splash',
       iosSplashResourceName: 'Splash',
-      showSpinner: true,
-      spinnerColor: '#E8A0BF',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
     },
 
     // Status Bar
     StatusBar: {
-      style: 'LIGHT',
-      backgroundColor: '#E8A0BF',
+      style: 'DARK',
+      backgroundColor: '#0A1F0A',
     },
 
     // Keyboard
@@ -82,8 +84,8 @@ const config: CapacitorConfig = {
 
     // Local Notifications
     LocalNotifications: {
-      smallIcon: 'ic_stat_icon_config_sample',
-      iconColor: '#E8A0BF',
+      smallIcon: 'ic_stat_dreamos',
+      iconColor: '#D4AF37',
       sound: 'notification.wav',
     },
   },
