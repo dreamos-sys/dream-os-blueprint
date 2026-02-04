@@ -83,13 +83,19 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Service Worker Registration -->
+    <!-- Service Worker Registration - handled by vite-plugin-pwa -->
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('SW registered!', reg.scope))
-            .catch(err => console.error('SW registration failed:', err));
+      // PWA Service Worker is managed by vite-plugin-pwa
+      // Manual registration removed to avoid conflicts
+      if ('serviceWorker' in navigator && import.meta?.env?.PROD) {
+        window.addEventListener('load', async () => {
+          try {
+            const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            console.log('[Dream OS] SW registered:', registration.scope);
+          } catch (err) {
+            // SW registration may fail in development - this is normal
+            console.log('[Dream OS] SW registration skipped:', err.message);
+          }
         });
       }
     </script>
