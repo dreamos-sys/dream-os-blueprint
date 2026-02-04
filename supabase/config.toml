@@ -1,1 +1,4 @@
 project_id = "wtvdlnpwtbktlxwwjcxi"
+
+[functions.verify-module-access]
+verify_jwt = false

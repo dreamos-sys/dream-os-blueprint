@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, Lock, Eye, EyeOff, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { verifyModulePassword } from '@/services/moduleAuth';
 
 interface PasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
   moduleName: string;
   moduleIcon: React.ReactNode;
-  correctPassword: string;
+  moduleId: number;
   onSuccess: () => void;
 }
 
@@ -18,27 +19,51 @@ const PasswordModal = ({
   onClose,
   moduleName,
   moduleIcon,
-  correctPassword,
+  moduleId,
   onSuccess,
 }: PasswordModalProps) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (password === correctPassword) {
-      setIsSuccess(true);
-      setError('');
-      setTimeout(() => {
-        onSuccess();
-        handleClose();
-      }, 1000);
-    } else {
-      setError('Password salah! Coba lagi.');
-      setPassword('');
+    if (!password.trim()) {
+      setError('Password tidak boleh kosong');
+      return;
+    }
+
+    if (password.length > 100) {
+      setError('Password terlalu panjang');
+      return;
+    }
+
+    setIsVerifying(true);
+    setError('');
+
+    try {
+      // Server-side password verification
+      const result = await verifyModulePassword(moduleId, password);
+      
+      if (result.success) {
+        setIsSuccess(true);
+        setError('');
+        setTimeout(() => {
+          onSuccess();
+          handleClose();
+        }, 1000);
+      } else {
+        setError(result.error || 'Password salah! Coba lagi.');
+        setPassword('');
+      }
+    } catch (err) {
+      console.error('[PasswordModal] Verification error:', err);
+      setError('Gagal memverifikasi. Coba lagi.');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -46,6 +71,7 @@ const PasswordModal = ({
     setPassword('');
     setError('');
     setIsSuccess(false);
+    setIsVerifying(false);
     onClose();
   };
 
@@ -75,6 +101,7 @@ const PasswordModal = ({
               <button
                 onClick={handleClose}
                 className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted transition-colors"
+                disabled={isVerifying}
               >
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
@@ -108,11 +135,14 @@ const PasswordModal = ({
                     placeholder="••••••••"
                     className="pl-12 pr-12 h-14 text-lg rounded-xl border-2 focus:border-primary"
                     autoFocus
+                    disabled={isVerifying || isSuccess}
+                    maxLength={100}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isVerifying}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -150,16 +180,25 @@ const PasswordModal = ({
                 <Button
                   type="submit"
                   className="w-full h-14 text-lg font-semibold rounded-xl bg-gradient-to-r from-primary to-rose-glow hover:opacity-90 transition-opacity"
-                  disabled={!password || isSuccess}
+                  disabled={!password || isSuccess || isVerifying}
                 >
-                  {isSuccess ? 'Berhasil! ✓' : 'Masuk 🔓'}
+                  {isVerifying ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Memverifikasi...
+                    </>
+                  ) : isSuccess ? (
+                    'Berhasil! ✓'
+                  ) : (
+                    'Masuk 🔓'
+                  )}
                 </Button>
               </form>
 
               {/* Security Badge */}
               <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <Lock className="w-3 h-3" />
-                <span>Enkripsi Duri Bidara 🌵 Aktif</span>
+                <span>Verifikasi Server Aman 🔒</span>
               </div>
             </div>
           </motion.div>
