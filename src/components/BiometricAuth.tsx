@@ -1,29 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Fingerprint, X, ShieldCheck, AlertTriangle, Smartphone } from 'lucide-react';
+import { Fingerprint, X, ShieldCheck, AlertTriangle, Smartphone, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useBiometricAuth, useNativeCapabilities } from '@/hooks/useNativeCapabilities';
+import { verifyArchitectAccess } from '@/services/moduleAuth';
 
 interface BiometricAuthProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  masterKey?: string;
-  triggerCode?: string;
 }
 
 const BiometricAuth = ({
   isOpen,
   onClose,
   onSuccess,
-  masterKey = 'Mr.M_Architect_2025',
-  triggerCode = '012443410'
 }: BiometricAuthProps) => {
   const [inputCode, setInputCode] = useState('');
   const [showKeypad, setShowKeypad] = useState(false);
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   
   const { authenticate, isAuthenticating } = useBiometricAuth();
   const { hasBiometric, isRedmiNote9Pro, deviceModel } = useNativeCapabilities();
@@ -39,17 +37,40 @@ const BiometricAuth = ({
     }
   };
 
-  const handleCodeSubmit = () => {
-    if (inputCode === triggerCode || inputCode === masterKey) {
-      setIsSuccess(true);
-      setError('');
-      setTimeout(() => {
-        onSuccess();
-        handleClose();
-      }, 1000);
-    } else {
-      setError('Kode tidak valid! ⚠️');
-      setInputCode('');
+  const handleCodeSubmit = async () => {
+    if (!inputCode.trim()) {
+      setError('Kode tidak boleh kosong');
+      return;
+    }
+
+    if (inputCode.length > 50) {
+      setError('Kode terlalu panjang');
+      return;
+    }
+
+    setIsVerifying(true);
+    setError('');
+
+    try {
+      // Server-side verification
+      const result = await verifyArchitectAccess(inputCode);
+      
+      if (result.success) {
+        setIsSuccess(true);
+        setError('');
+        setTimeout(() => {
+          onSuccess();
+          handleClose();
+        }, 1000);
+      } else {
+        setError('Kode tidak valid! ⚠️');
+        setInputCode('');
+      }
+    } catch (err) {
+      console.error('[BiometricAuth] Verification error:', err);
+      setError('Gagal memverifikasi. Coba lagi.');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -58,6 +79,7 @@ const BiometricAuth = ({
     setError('');
     setShowKeypad(false);
     setIsSuccess(false);
+    setIsVerifying(false);
     onClose();
   };
 
@@ -65,6 +87,8 @@ const BiometricAuth = ({
   const keypadNumbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '✓'];
 
   const handleKeypadPress = (key: string) => {
+    if (isVerifying) return;
+    
     if (key === 'C') {
       setInputCode('');
       setError('');
@@ -98,6 +122,7 @@ const BiometricAuth = ({
               <button
                 onClick={handleClose}
                 className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted transition-colors"
+                disabled={isVerifying}
               >
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
@@ -145,7 +170,7 @@ const BiometricAuth = ({
                   {hasBiometric && (
                     <motion.button
                       onClick={handleBiometricAuth}
-                      disabled={isAuthenticating}
+                      disabled={isAuthenticating || isVerifying}
                       className="w-full py-6 rounded-2xl bg-gradient-to-r from-bidara to-secondary mb-4 flex flex-col items-center justify-center gap-2"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -181,20 +206,31 @@ const BiometricAuth = ({
                         onChange={(e) => setInputCode(e.target.value)}
                         placeholder="Master Key atau Trigger Code"
                         className="h-14 text-center text-lg rounded-xl"
+                        disabled={isVerifying}
+                        maxLength={50}
                       />
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
                           onClick={() => setShowKeypad(true)}
                           className="flex-1 h-12 rounded-xl"
+                          disabled={isVerifying}
                         >
                           Keypad 🔢
                         </Button>
                         <Button
                           onClick={handleCodeSubmit}
                           className="flex-1 h-12 rounded-xl bg-gradient-to-r from-primary to-rose-glow"
+                          disabled={isVerifying || !inputCode.trim()}
                         >
-                          Verifikasi
+                          {isVerifying ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Verifikasi...
+                            </>
+                          ) : (
+                            'Verifikasi'
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -213,16 +249,21 @@ const BiometricAuth = ({
                           <motion.button
                             key={key}
                             onClick={() => handleKeypadPress(key)}
+                            disabled={isVerifying}
                             className={`h-14 rounded-xl font-bold text-xl ${
                               key === '✓' 
                                 ? 'bg-gradient-to-r from-secondary to-bidara text-primary-foreground' 
                                 : key === 'C'
                                 ? 'bg-destructive/20 text-destructive'
                                 : 'bg-muted hover:bg-muted/80'
-                            }`}
+                            } ${isVerifying ? 'opacity-50' : ''}`}
                             whileTap={{ scale: 0.95 }}
                           >
-                            {key}
+                            {key === '✓' && isVerifying ? (
+                              <Loader2 className="w-5 h-5 mx-auto animate-spin" />
+                            ) : (
+                              key
+                            )}
                           </motion.button>
                         ))}
                       </div>
@@ -231,6 +272,7 @@ const BiometricAuth = ({
                         variant="ghost"
                         onClick={() => setShowKeypad(false)}
                         className="w-full"
+                        disabled={isVerifying}
                       >
                         Kembali ke Input Teks
                       </Button>
@@ -257,7 +299,7 @@ const BiometricAuth = ({
               {/* Security Badge */}
               <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
                 <ShieldCheck className="w-3 h-3" />
-                <span>Ghost Bypass Protocol 👻</span>
+                <span>Verifikasi Server Aman 🔒</span>
               </div>
             </div>
           </motion.div>

@@ -14,16 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      module_access_logs: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          module_id: number | null
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          module_id?: number | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          module_id?: number | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_access_logs_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modules: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon_name: string | null
+          id: number
+          name: string
+          password_hash: string
+          role_required: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon_name?: string | null
+          id?: number
+          name: string
+          password_hash: string
+          role_required?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon_name?: string | null
+          id?: number
+          name?: string
+          password_hash?: string
+          role_required?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      log_module_access: {
+        Args: {
+          p_ip_address: string
+          p_module_id: number
+          p_success: boolean
+          p_user_agent: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      verify_module_password: {
+        Args: { p_module_id: number; p_password_hash: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "admin"
+        | "master_admin"
+        | "architect"
+        | "security"
+        | "janitor_building"
+        | "janitor_garden"
+        | "maintenance"
+        | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +272,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "admin",
+        "master_admin",
+        "architect",
+        "security",
+        "janitor_building",
+        "janitor_garden",
+        "maintenance",
+        "user",
+      ],
+    },
   },
 } as const
